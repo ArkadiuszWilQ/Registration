@@ -45,56 +45,27 @@ class PermissionsController extends AppController
             $allRolesName[] = $role->name;
         };
 
-//        $resourcesTable = TableRegistry::get('Resources');
-//        $resourcesList = $resourcesTable
-//            ->find()
-//            ->select(['controller', 'action', 'ResourcesRoles.type'])
-//            ->join([
-//                'alias' => 'ResourcesRoles',
-//                'table' => 'resources_roles',
-//                'type' => 'LEFT',
-//                'conditions' => 'Resources.id = ResourcesRoles.resource_id'
-//            ])
-//            ->toArray();
 
         $resourcesList = $resourcesTable
             ->find()
             ->contain(['Roles'])
             ->toArray();
 
-//        dd([
-//            $resourcesList2[0]->roles[0]->name,
-//            $resourcesList2[0]->roles[0]->_joinData->type,
-//            $resourcesList,
-//            $resourcesList2,
-//        ]);
-        //foreach w foreachu bez kluczy
-//        /** @var Resource $resourcesList */
-//        foreach($resourcesList2 as $dataForTable) {
-//            $temp = [
-//                'Controller' => $dataForTable->controller,
-//                'Action' => $dataForTable->action,
-//                'Roles' => ['test'],
-//            ];
-//
-//            foreach($dataForTable->roles as $roles) {
-//                $temp['Roles'][] = 1;
-//            };
-//
-//            $table[] = $temp;
-//        };
 
         /** @var Resource $resourcesList */
         foreach($resourcesList as $dataForTable) {
             $key = "$dataForTable->controller/$dataForTable->action";
             $ret[$key] = [
+                'id' => $dataForTable->id,
                 'controller' => $dataForTable->controller,
                 'action' => $dataForTable->action,
                 'roles' => [],
             ];
 
+
             /** @var Role $role */
             foreach($dataForTable->roles as $role) {
+
                 $ret[$key]['roles'][array_search($role['name'], $allRolesName)] = [
                     'id' => $role['id'],
                     'name' => $role['name'],
@@ -103,70 +74,23 @@ class PermissionsController extends AppController
             };
         };
 
-
-
-
-        /**
-         * dd($allRolesName) daje
-         * 	(int) 0 => 'users_add',
-        (int) 1 => 'users_edit',
-        (int) 2 => 'users_delete',
-        (int) 3 => 'admin',
-        (int) 4 => 'roles_add',
-        (int) 5 => 'roles_edit',
-        (int) 6 => 'roles_delete',
-        (int) 7 => 'add_users',
-        (int) 8 => 'edit_users',
-        (int) 9 => 'delete_users',
-        (int) 10 => 'add_roles',
-        (int) 11 => 'edit_roles',
-        (int) 12 => 'delete_roles',
-        (int) 13 => 'export_users'
-         */
-
+        foreach($rolesList as $singleRole) {
+            $rolesName[$singleRole['id']] = $singleRole['name'];
+        }
 
         $this->set(compact('allRolesName'));
         $this->set(compact('controllerAndActionField'));
         $this->set(compact('ret'));
+        $this->set(compact('rolesName'));
+    }
 
+    public function editRole()
+    {
 
+    }
 
-        //STARY KOD
-//        $ret = [];
-//
-//        foreach($table as $data) {
-//            //Nadaniei zmienner $resource formy controller/action
-//            $resource = $data['Controller'] . DS . $data['Action'];
-//
-//            if(array_key_exists($resource, $ret) == false) {
-//                    $ret[$resource] = [
-//                        'Controller' => $data['Controller'],
-//                        'Action' => $data['Action'],
-//                        'Type' => []
-//                    ];
-//            }
-//
-//            $ret[$resource]['Type'][] = $data['Type'];
-//
-//        };
-//
+    public function editResource()
+    {
 
-
-        //kod na wzór
-        /** * foreach($keywordsResults as $keywordData) {
-         * $keyword = $keywordData['keyword'];
-         *
-         * if(array_key_exists($keyword, $data) == false) {
-         * $data[$keyword] = [
-         * 'kid' => $keywordData['kid'],
-         * 'keyword' => $keyword,
-         * 'searches' => $keywordData['searches'],
-         * 'common_factor' => 0
-         * ];
-         * }
-         *
-         * $data[$keyword]['common_factor']++;
-         * }
-         **/
     }
 }

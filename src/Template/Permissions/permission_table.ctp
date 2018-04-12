@@ -2,21 +2,16 @@
     <thead>
     <tr>
         <th>#</th>
-
-        <?php foreach($allRolesName as $roleName): ?>
-        <th><strong><?php  echo $roleName?></strong><br>
-            <?php endforeach; ?>
+        <?php foreach($rolesName as $key => $value): ?>
+            <th><?= $this->Html->link(__($value), ['controller' =>'Permissions', 'action' => 'editRole',  $key]) ?></th>
+        <?php endforeach; ?>
     </tr>
     </thead>
     <tbody>
 
     <?php foreach($ret as $resource): ?>
     <tr>
-        <td>
-            <?php
-              echo($resource['controller']. DS .$resource['action'])
-            ?>
-        </td>
+        <td><?= $this->Html->link(__($resource['controller'] . DS . $resource['action']), ['controller' =>'Permissions', 'action' => 'editResources', $resource['id']]) ?></td>
             <?php for($i = 0; $i < count($allRolesName); $i++): ?>
                 <?php if(array_key_exists($i, $resource['roles'])): ?>
 
@@ -38,55 +33,10 @@
             <?php endfor; ?>
     <?php endforeach; ?>
     </tr>
-
-
-
-    <!--<tr>-->
-    <!--<td>users/add</td>-->
-    <!--<td><img src="/img/permissions/oneOfMany.jpg"/></td>-->
-    <!--<td></td>-->
-    <!--<td></td>-->
-    <!--<td></td>-->
-    <!--<td></td>-->
-    <!--<td></td>-->
-    <!--<td></td>-->
-    <!--</tr>-->
-    <!--<tbody>-->
-    <!--<tr>-->
-    <!--<td>users/edit</td>-->
-    <!--<td></td>-->
-    <!--<td><img src="/img/permissions/oneOfMany.jpg"/></td>-->
-    <!--<td></td>-->
-    <!--<td></td>-->
-    <!--<td></td>-->
-    <!--<td></td>-->
-    <!--<td></td>-->
-    <!--</tr>-->
-    <!--<tr>-->
-    <!--<td>users/delete</td>-->
-    <!--<td></td>-->
-    <!--<td></td>-->
-    <!--<td><img src="/img/permissions/require.jpg"/></td>-->
-    <!--<td></td>-->
-    <!--<td></td>-->
-    <!--<td></td>-->
-    <!--<td></td>-->
-    <!--</tr>-->
-    <!--<tr>-->
-    <!--<td>roles/add</td>-->
-    <!--<td></td>-->
-    <!--<td></td>-->
-    <!--<td></td>-->
-    <!--<td></td>-->
-    <!--<td><img src="/img/permissions/oneOfMany.jpg"/></td>-->
-    <!--<td></td>-->
-    <!--<td></td>-->
-    <!--</tr>-->
     </tbody>
 </table>
 
 <br>
-
 
 <table>
     <tbody>

@@ -203,8 +203,6 @@ class AppController extends Controller
             $dynamicConfig[strtolower($resourcesRole->type)][] = $resourcesRole->role->id;
         }
 
-        dd($dynamicConfig);
-
         return $dynamicConfig;
     }
 
