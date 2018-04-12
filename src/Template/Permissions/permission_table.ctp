@@ -33,7 +33,7 @@
                     <?php endif; ?>
 
                 <?php else : ?>
-                    <td>X</td>
+                    <td></td>
                 <?php endif; ?>
             <?php endfor; ?>
     <?php endforeach; ?>

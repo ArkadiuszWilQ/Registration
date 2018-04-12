@@ -88,21 +88,16 @@ class AppController extends Controller
 
     public function isAuthorized($user): bool
     {
+
         $controller = $this->request->getParam('controller');
         $action = $this->request->getParam('action');
-
-        if($this->isAdmin()){
-            return true;
-        }
 
         //jeśli $this->config[$controller][$action] nie ma wartości, przypisany jest null
         $currentConfig = $this->getConfigForRequest($controller, $action);
 
-
-        //jeśli podany jest kontroler, ale nie podana jest akcja = dostęp do wszystkich akcji podanego kontrolera
-        dd($this->accessForController());
-
-
+        if($this->isAdmin()) {
+            return true;
+        }
 
         if(is_null($currentConfig)) {
             //domyślna akcja w przypadku braku konfiguracji
@@ -134,21 +129,7 @@ class AppController extends Controller
             }
         }
 
-
-
         return false;
-    }
-
-    public function accessForController()
-    {
-        $resourcesTable = TableRegistry::get('Resources');
-        $resourcesList = $resourcesTable
-            ->find()
-            ->select('id')
-            ->where('Resources.action = "*"')
-            ->toArray();
-
-        return $resourcesList;
     }
 
     public function isAdmin()
@@ -199,8 +180,21 @@ class AppController extends Controller
             ->toArray();
 
         if(empty($resourcesRolesList)) {
-            return null;
+            $resourcesRolesList = $resourcesRolesTable
+                ->find()
+                ->contain(['Resources', 'Roles'])
+                ->innerJoin(['Resources' => "resources"], ['ResourcesRoles.resource_id = Resources.id'])
+                ->where(["Resources.controller" => strtolower($controller), "Resources.action" => "*"])
+                ->toArray();
+
+            if(empty($resourcesRolesList)) {
+                return null;
+            }
         }
+
+//    if(empty($resourcesRolesList)) {
+//            return null;
+//        }
 
         $dynamicConfig = [];
 
@@ -208,6 +202,8 @@ class AppController extends Controller
         foreach($resourcesRolesList as $resourcesRole) {
             $dynamicConfig[strtolower($resourcesRole->type)][] = $resourcesRole->role->id;
         }
+
+        dd($dynamicConfig);
 
         return $dynamicConfig;
     }
