@@ -84,12 +84,26 @@ class PermissionsController extends AppController
         $this->set(compact('rolesName'));
     }
 
-    public function editRole()
+    public function editRole($id = null)
+    {
+        $roleTable = TableRegistry::get('Roles');
+        $role = $roleTable
+            ->find()
+            ->select(['name'])
+            ->where( ['id' => $id])
+            ->first();
+
+        $this->set(compact('role'));
+
+
+    }
+
+    public function editResource($id = null)
     {
 
     }
 
-    public function editResource()
+    public function editResourceRole($id = null)
     {
 
     }
