@@ -45,7 +45,7 @@ class PermissionsController extends AppController
             $allRolesName[] = $role->name;
         };
 
-
+        $resourcesTable = TableRegistry::get('Resources');
         $resourcesList = $resourcesTable
             ->find()
             ->contain(['Roles'])
@@ -74,6 +74,7 @@ class PermissionsController extends AppController
             };
         };
 
+
         foreach($rolesList as $singleRole) {
             $rolesName[$singleRole['id']] = $singleRole['name'];
         }
@@ -89,17 +90,108 @@ class PermissionsController extends AppController
         $roleTable = TableRegistry::get('Roles');
         $role = $roleTable
             ->find()
-            ->select(['name'])
-            ->where( ['id' => $id])
+            ->contain(['Resources'])
+            ->where(['id' => $id])
             ->first();
 
-        $this->set(compact('role'));
+        if(is_null($role)) {
+            $this->Flash->error('Wprowadziłeś nieistniejące ID roli');
+
+            return $this->redirect(['controller' => 'Permissions', 'action' => 'permissionTable']);
+        }
+
+        if($this->request->is('post')) {
+            pr($this->request->getData());
+            $type = $this->request->getData('type');
+
+            $resources = TableRegistry::get('Resources')
+                ->find('list', [
+                    'keyField' => 'id',
+                    'valueField' => function(Resource $resource) {
+                        return "$resource->controller/$resource->action";
+                    }
+                ])
+                ->toArray();
+
+            $selectedOptions = TableRegistry::get('ResourcesRoles')
+                ->find()
+                ->contain('resources')
+                ->where(['ResourcesRoles.role_id' => $id, 'ResourcesRoles.type' => $type])
+                ->toArray();
+
+            $selectedOptionsIds = array_column(array_column($selectedOptions, 'Resources'), 'id');
+            $resourcesIdsToSave = $this->request->getData('resources_ids');
 
 
+            if(is_array($resourcesIdsToSave)) {
+                $resourceRolesTable = TableRegistry::get('ResourcesRoles');
+
+                $data = [];
+                foreach($resourcesIdsToSave as $value) {
+                    $data[] = ['type' => $type, 'resource_id' => $value, 'role_id' => $id];
+                }
+
+                $entities = $resourceRolesTable->newEntities($data);
+
+                $resourceRolesTable->deleteAll(['role_id' => $id, 'type' => $type]);
+                $resourceRolesTable->saveMany($entities);
+            }
+
+            $this->set(compact('type', 'resources', 'selectedOptionsIds'));
+        }
+
+        $this->set(compact('role', 'id'));
     }
 
     public function editResource($id = null)
     {
+
+        $rolesTable = TableRegistry::get('Roles');
+        $rolesList = $rolesTable
+            ->find()
+            ->toArray();
+
+        //wszystkie nazwy ról jakie zostały utworzone
+        $allRolesName = [];
+        /** @var Role $role */
+        foreach($rolesList as $role) {
+            $allRolesName[] = $role->name;
+        };
+
+        $resourcesTable = TableRegistry::get('Resources');
+        $resourcesList = $resourcesTable
+            ->find()
+            ->contain(['Roles'])
+            ->innerJoin(['ResourcesRoles' => 'resources_roles'], ['Resources.id = ResourcesRoles.resource_id'])
+            ->innerJoin(['Roles' => 'roles'], ['ResourcesRoles.role_id = Roles.id'])
+            ->where(['Roles.id' => $id])
+            ->toArray();
+
+        /** @var Resource $resourcesList */
+        foreach($resourcesList as $dataForTable) {
+            $key = "$dataForTable->controller/$dataForTable->action";
+            $ret[$key] = [
+                'id' => $dataForTable->id,
+                'controller' => $dataForTable->controller,
+                'action' => $dataForTable->action,
+                'roles' => [],
+            ];
+
+
+            /** @var Role $role */
+            foreach($dataForTable->roles as $role) {
+
+                $ret[$key]['roles'][array_search($role['name'], $allRolesName)] = [
+                    'id' => $role['id'],
+                    'name' => $role['name'],
+                    'type' => $role->_joinData['type']
+                ];
+            };
+        };
+
+        dd($ret);
+
+        $this->set(compact('ret'));
 
     }
 

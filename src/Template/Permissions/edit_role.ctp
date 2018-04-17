@@ -1,16 +1,47 @@
-<h2> <?php echo ("Nazwa roli: ". $role['name']) ?> </h2>
+<h2> <?php echo ("Nazwa roli: " . $role['name']) ?> </h2>
 
-<br>
-<br>
-<br>
+<?= $this->Form->create(null, [
+    'url' => ['controller' => 'Permissions', 'action' => 'edit_role', $id],
+    'type' => 'post'
+]) ?>
 
-    <?= $this->Form->create($resourcesRole) ?>
+    <br>
     <fieldset>
-        <legend><?= __('Add Resources Role') ?></legend>
+        <legend><?= __('Select Resource Role') ?></legend>
         <?php
-            echo $this->Form->radio('type', ['denny' => 'Denny', 'require' => 'Require', 'one_of_many' => 'One of many']);
-            echo $this->Form->select('resource_id', $resourcesOptions);
-            echo $this->Form->control('role_id', ['options' => $roles]);
+            if(isset($type) == false) {
+                  echo $this->Form->radio(
+                      'type',
+                      [
+                           ['value' => 'denny', 'text' => 'Denny'],
+                           ['value' => 'one_of_many', 'text' => 'One of many'],
+                           ['value' => 'require', 'text' => 'Require']
+                      ],
+                      [
+                        'empty' => false,
+                        'required' => true
+                      ]
+                  );
+            } else {
+                echo $this->Form->hidden('type', ['value' => $type]);
+                echo $this->Form->radio(
+                    'type_show',
+                    [
+                        ['value' => 'denny', 'text' => 'Denny'],
+                        ['value' => 'one_of_many', 'text' => 'One of many'],
+                        ['value' => 'require', 'text' => 'Require']
+                    ],
+                    [
+                        'value' => $type,
+                        'disabled' => true,
+                    ]
+                );
+
+                echo $this->Form->multiCheckbox('resources_ids', $resources, [
+                    'default' => $selectedOptionsIds
+                ]);
+            }
         ?>
     </fieldset>
     <?= $this->Form->button(__('Submit')) ?>
+<?= $this->Form->end() ?>
