@@ -4,7 +4,11 @@ namespace App\Controller;
 
 use App\Controller\AppController;
 use App\Model\Entity\Resource;
+use App\Model\Entity\ResourcesRole;
 use App\Model\Entity\Role;
+use App\Model\Table\ResourcesRolesTable;
+use Cake\ORM\Entity;
+use Cake\ORM\Table;
 use Cake\ORM\TableRegistry;
 use function PHPSTORM_META\type;
 
@@ -84,8 +88,57 @@ class PermissionsController extends AppController
         $this->set(compact('controllerAndActionField'));
         $this->set(compact('ret'));
         $this->set(compact('rolesName'));
-    }
 
+        $rolesTable = TableRegistry::get('Roles');
+        $rolesList = $rolesTable
+            ->find()
+            ->toArray();
+
+        $resourcesTable = TableRegistry::get('Resources');
+        $resourcesList = $resourcesTable
+            ->find()
+            ->toArray();
+
+        $resourcesRolesTable = TableRegistry::get('ResourcesRoles');
+        $resourcesRolesList = $resourcesRolesTable
+            ->find()
+            ->toArray();
+
+//        dd($resourcesRolesList);
+        $temp = [];
+        /** @var ResourcesRole $resourcesRole */
+        foreach($resourcesRolesList as $resourcesRole) {
+            $temp[$resourcesRole->resource_id][$resourcesRole->role_id]['type'] = $resourcesRole->type;
+        }
+
+        $prepareData = [];
+        /** @var Resource $resource */
+        foreach($resourcesList as $resource) {
+            foreach($rolesList as $role) {
+                $prepareData[$resource->id][$role->id] = $temp[$resource->id][$role->id]['type'] ?? null;
+
+            }
+        }
+
+        $table = [];
+        /** @var Resource $resource */
+        foreach($resourcesList as $resource) {
+            $data = [
+                'resource_id' => $resource->id,
+                'name' => $resource->controller . "/" . $resource->action,
+                'roles' => []
+            ];
+            foreach($rolesList as $role) {
+                $data['roles'][] = [
+                    'role_id' => $role->id,
+                    'type' => $temp[$resource->id][$role->id]['type'] ?? null
+                ];
+            }
+
+            $table[] = $data;
+        }
+        $this->set(compact('table'));
+    }
 
     public function editRole($id = null)
     {
@@ -144,10 +197,11 @@ class PermissionsController extends AppController
                 // wybrał jakieś do ustawienia więc tu je ustaw
                 $resourceRolesTable->saveMany($resourceRolesTable->newEntities($data));
 
+                $this->Flash->success('Edit role completed');
                 return $this->redirect(['controller' => 'Permissions', 'action' => 'permissionTable']);
             }
 
-        $this->set(compact('resource', 'id', 'typeList', 'roles', 'type', 'selectedOptionsIds'));
+            $this->set(compact('resource', 'id', 'typeList', 'roles', 'type', 'selectedOptionsIds'));
 
             $this->set(compact('type', 'resources', 'selectedOptionsIds'));
         }
@@ -213,15 +267,46 @@ class PermissionsController extends AppController
                 }
                 // wybrał jakieś do ustawienia więc tu je ustaw
                 $resourceRolesTable->saveMany($resourceRolesTable->newEntities($data));
-
+                $this->Flash->success('Edit resource completed');
                 return $this->redirect(['controller' => 'Permissions', 'action' => 'permissionTable']);
             }
         }
         $this->set(compact('resource', 'id', 'typeList', 'roles', 'type', 'selectedOptionsIds'));
     }
 
-    public function editResourceRole($id = null)
+    public function editResourceRole($resourceId = null, $roleId = null)
     {
+        if(is_null($resourceId) || is_null($roleId)) {
+            $this->Flash->error('Resource ID or Role ID does not exist ');
+            return $this->redirect(['controller' => 'Permissions', 'action' => 'permissionTable']);
+        }
 
+        /** @var ResourcesRolesTable $resourcesRolesTable */
+        $resourcesRolesTable = TableRegistry::get("ResourcesRoles");
+
+        /** @var ResourcesRole|null $resourcesRoles */
+        $resourcesRoles = $resourcesRolesTable
+            ->find()
+            ->where(['ResourcesRoles.resource_id' => $resourceId, 'ResourcesRoles.role_id' => $roleId])
+            ->first();
+
+        if(is_null($resourcesRoles)) {
+            $resourcesRoles = $resourcesRolesTable->newEntity();
+            $resourcesRoles->resource_id = $resourceId;
+            $resourcesRoles->role_id = $roleId;
+        }
+
+        $selectedType = $resourcesRoles->type ?? 'null';
+
+        $this->set(compact('selectedType', 'resourceId', 'roleId'));
+
+        if($this->request->is('post')) {
+            if($this->request->getData('type') !== $selectedType) {
+                $resourcesRoles->type = $this->request->getData('type');
+                $resourcesRolesTable->save($resourcesRoles);
+            }
+                $this->Flash->success('Saved');
+                $this->redirect(['controller' => 'Permissions', 'action' => 'permissionTable']);
+        }
     }
 }

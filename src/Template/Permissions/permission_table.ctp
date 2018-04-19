@@ -3,42 +3,35 @@
     <tr>
         <th>#</th>
         <?php foreach($rolesName as $key => $value): ?>
-            <th><?= $this->Html->link(__($value), ['controller' =>'Permissions', 'action' => 'editRole',  $key]) ?></th>
+        <th><?= $this->Html->link(__($value), ['controller' =>'Permissions', 'action' => 'editRole',  $key]) ?></th>
         <?php endforeach; ?>
     </tr>
     </thead>
     <tbody>
-
-    <?php foreach($ret as $resource): ?>
+    <?php foreach($table as $resource): ?>
     <tr>
-        <td><?= $this->Html->link(__($resource['controller'] . DS . $resource['action']), ['controller' =>'Permissions', 'action' => 'editResource', $resource['id']]) ?></td>
-            <?php for($i = 0; $i < count($allRolesName); $i++): ?>
-                <?php if(array_key_exists($i, $resource['roles'])): ?>
-
-                    <?php if($resource['roles'][$i]['type'] == 'one_of_many'): ?>
-                       <td><?= $this->Html->image('/img/permissions/oneOfMany.jpg',['url' => ['controller' => 'Permissions', 'action' => 'edit_resource_role', $resource['id']]]) ?></td>
-                    <?php endif; ?>
-
-                    <?php if($resource['roles'][$i]['type'] == 'require') : ?>
-                       <td><?= $this->Html->image('/img/permissions/require.jpg',['url' => ['controller' => 'Permissions', 'action' => 'edit_resource_role', $resource['id']]]) ?></td>
-                    <?php endif; ?>
-
-                    <?php if($resource['roles'][$i]['type'] == 'denny') : ?>
-                       <td><?= $this->Html->image('/img/permissions/denny.jpg',['url' => ['controller' => 'Permissions', 'action' => 'edit_resource_role', $resource['id']]]) ?></td>
-                    <?php endif; ?>
-
-                <?php else : ?>
-                    <td></td>
-                <?php endif; ?>
-            <?php endfor; ?>
-    <?php endforeach; ?>
+        <td><?= $this->Html->link($resource['name'], ['controller' =>'Permissions', 'action' => 'editResource', $resource['resource_id']]) ?></td>
+        <?php foreach($resource['roles'] as $roleData): ?>
+        <?php if(is_null($roleData['type'])): ?>
+        <td><?= $this->Html->link(__("not set"), ['controller' =>'Permissions', 'action' => 'edit_resource_role', $resource['resource_id'], $roleData['role_id']]) ?></td>
+        <?php else : ?>
+        <?php if($roleData['type'] == 'one_of_many'): ?>
+        <td><?= $this->Html->image('/img/permissions/oneOfMany.jpg',['url' => ['controller' => 'Permissions', 'action' => 'edit_resource_role', $resource['resource_id'], $roleData['role_id']]]) ?></td>
+        <?php elseif($roleData['type'] == 'require') : ?>
+        <td><?= $this->Html->image('/img/permissions/require.jpg',['url' => ['controller' => 'Permissions', 'action' => 'edit_resource_role', $resource['resource_id'], $roleData['role_id']]]) ?></td>
+        <?php elseif($roleData['type'] == 'denny') : ?>
+        <td><?= $this->Html->image('/img/permissions/denny.jpg',['url' => ['controller' => 'Permissions', 'action' => 'edit_resource_role', $resource['resource_id'], $roleData['role_id']]]) ?></td>
+        <?php endif; ?>
+        <?php endif; ?>
+        <?php endforeach; ?>
     </tr>
+    <?php endforeach; ?>
     </tbody>
 </table>
 
 <br>
 
-<table>
+<table border="0">
     <tbody>
     <tr>
         <td><img src="/img/permissions/oneOfMany.jpg"/> - musi zawierać jedną z ról</td>
@@ -51,9 +44,3 @@
     </tr>
     </tbody>
 </table>
-
-
-
-
-
-
