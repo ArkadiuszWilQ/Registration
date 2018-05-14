@@ -216,3 +216,5 @@ if (Configure::read('debug')) {
 }
 
 Plugin::load('CsvView');
+Plugin::load('CakePdf', ['bootstrap' => true]);
+Configure::write('CakePdf.crypto', 'CakePdf.Pdftk');
